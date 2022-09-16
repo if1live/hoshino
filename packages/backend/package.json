@@ -17,12 +17,14 @@
   },
   "dependencies": {
     "@aws-sdk/client-apigatewaymanagementapi": "^3.171.0",
+    "engine.io-parser": "^5.0.4",
     "ioredis": "^5.2.3"
   },
   "devDependencies": {
     "@tinyhttp/dotenv": "^2.0.4",
     "@types/aws-lambda": "^8.10.104",
     "@types/mocha": "^9.1.1",
+    "engine.io": "^6.2.0",
     "engine.io-client": "^6.2.2",
     "esbuild": "^0.15.7",
     "expect": "^29.0.3",
