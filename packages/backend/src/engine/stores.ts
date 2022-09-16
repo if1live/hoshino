@@ -14,7 +14,6 @@ export interface ConnectionModel {
 
   ts_connect: number;
   ts_touch: number;
-  ts_timeout: number;
 }
 
 function createKey(id: string) {
@@ -30,8 +29,34 @@ export class ConnectionStore {
     await this.redis.setex(key, WS_CONNECTION_DURATION_SECONDS, value);
   }
 
+  public async get(id: string): Promise<ConnectionModel | null> {
+    const key = createKey(id);
+    const value = await this.redis.get(key);
+    if (value) {
+      const obj = JSON.parse(value);
+      return obj as ConnectionModel;
+    } else {
+      return null;
+    }
+  }
+
   public async del(id: string): Promise<void> {
     const key = createKey(id);
     await this.redis.del(key);
+  }
+
+  public async touch(id: string, ts: number): Promise<void> {
+    const prev = await this.get(id);
+    if (!prev) {
+      return;
+    }
+
+    const next: typeof prev = {
+      ...prev,
+      ts_touch: ts,
+    };
+    const key = createKey(id);
+    const text = JSON.stringify(next);
+    await this.redis.set(key, text, "KEEPTTL");
   }
 }

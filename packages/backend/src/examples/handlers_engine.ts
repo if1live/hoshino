@@ -3,8 +3,25 @@ import { decodePacket } from "engine.io-parser";
 import { deriveEndpoint } from "../engine/helpers.js";
 import { WebSocketHandler } from "./types.js";
 import * as Engine from "../engine/engine.js";
+import { ConnectionModel, ConnectionStore } from "../engine/stores.js";
+import { redis } from "../handlers/instances.js";
 
 const connect_engine: APIGatewayProxyHandler = async (event, context) => {
+  const connectionId = event.requestContext.connectionId!;
+  const endpoint = deriveEndpoint(event);
+  const ts_now = Date.now();
+  const ts_connect = event.requestContext.connectedAt ?? ts_now;
+
+  const model: ConnectionModel = {
+    connectionId,
+    endpoint,
+    ts_connect: ts_connect,
+    ts_touch: ts_connect,
+  };
+
+  const store = new ConnectionStore(redis);
+  await store.set(model.connectionId, model);
+
   return {
     statusCode: 200,
     body: "OK",
@@ -12,6 +29,10 @@ const connect_engine: APIGatewayProxyHandler = async (event, context) => {
 };
 
 const disconnect_engine: APIGatewayProxyHandler = async (event, context) => {
+  const connectionId = event.requestContext.connectionId!;
+  const store = new ConnectionStore(redis);
+  await store.del(connectionId);
+
   return {
     statusCode: 200,
     body: "OK",
@@ -19,13 +40,18 @@ const disconnect_engine: APIGatewayProxyHandler = async (event, context) => {
 };
 
 const dispatch_engine: APIGatewayProxyHandler = async (event, context) => {
+  const connectionId = event.requestContext.connectionId!;
+  const endpoint = deriveEndpoint(event);
+
   const body = event.body ?? "";
   const parsed = decodePacket(body);
 
   const connection: Engine.Connection = {
-    connectionId: event.requestContext.connectionId!,
-    endpoint: deriveEndpoint(event),
+    connectionId,
+    endpoint,
   };
+
+  const store = new ConnectionStore(redis);
 
   switch (parsed.type) {
     case "noop": {
@@ -38,20 +64,26 @@ const dispatch_engine: APIGatewayProxyHandler = async (event, context) => {
       break;
     }
     case "message": {
-      // echo
       const text = parsed.data;
       if (text === "close") {
         await Engine.close(connection);
       } else if (text === "ping") {
         await Engine.heartbeat_ping(connection, undefined);
+      } else if (text === "info") {
+        const model = await store.get(connectionId);
+        await Engine.send(connection, JSON.stringify(model));
       } else {
         await Engine.send(connection, text);
       }
-
       break;
     }
     case "ping": {
+      await store.touch(connectionId, Date.now());
       await Engine.heartbeat_pong(connection, parsed.data);
+      break;
+    }
+    case "pong": {
+      await store.touch(connectionId, Date.now());
       break;
     }
     case "close": {

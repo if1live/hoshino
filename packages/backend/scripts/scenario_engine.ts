@@ -19,6 +19,9 @@ socket.on("close", (data) => console.log("close", data));
 socket.on("open", async () => {
   console.log("open");
 
+  socket.send("info", {});
+  await setTimeout(1000);
+
   for (let i = 0; i < 2; i++) {
     const message = `${Date.now()}`;
     socket.send(message, {});
@@ -26,6 +29,9 @@ socket.on("open", async () => {
   }
 
   socket.send("ping", {});
+  await setTimeout(1000);
+
+  socket.send("info", {});
   await setTimeout(1000);
 
   socket.send("close", {});
