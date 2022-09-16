@@ -1,0 +1,35 @@
+{
+  "name": "@hoshino/backend",
+  "version": "1.0.0",
+  "description": "",
+  "license": "ISC",
+  "author": "",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "dev": "ts-node-esm ./src/dev.ts",
+    "check:watch": "tsc --watch",
+    "clean": "rimraf dist output .serverless",
+    "test": "cross-env NODE_ENV=test mocha",
+    "fix": "run-s fix:prettier",
+    "fix:prettier": "prettier --write \"{src,test,scripts}/**/*.ts\"",
+    "package": "ts-node-esm ./scripts/build.ts"
+  },
+  "dependencies": {
+    "@aws-sdk/client-apigatewaymanagementapi": "^3.171.0",
+    "ioredis": "^5.2.3"
+  },
+  "devDependencies": {
+    "@tinyhttp/dotenv": "^2.0.4",
+    "@types/aws-lambda": "^8.10.104",
+    "@types/mocha": "^9.1.1",
+    "engine.io-client": "^6.2.2",
+    "esbuild": "^0.15.7",
+    "expect": "^29.0.3",
+    "ioredis-mock": "^8.2.2",
+    "mocha": "^10.0.0",
+    "serverless": "^3.22.0",
+    "serverless-scriptable-plugin": "^1.2.2",
+    "ws": "^8.8.1"
+  }
+}

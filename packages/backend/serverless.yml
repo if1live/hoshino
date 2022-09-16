@@ -1,0 +1,63 @@
+service: hoshino
+
+useDotenv: true
+
+plugins:
+  - serverless-scriptable-plugin
+
+provider:
+  name: aws
+  runtime: nodejs16.x
+
+  region: ap-northeast-1
+  stage: main
+
+  memorySize: 128
+  architecture: arm64
+
+  logRetentionInDays: 7
+  versionFunctions: false
+
+  apiGateway:
+    minimumCompressionSize: 1024 # Enable gzip compression for responses > 1 KB
+
+  environment:
+    AWS_NODEJS_CONNECTION_REUSE_ENABLED: 1
+    # NODE_OPTIONS: '--enable-source-maps --stack-trace-limit=1000'
+    STAGE: ${self:provider.stage}
+
+    REDIS_URL: ${env:REDIS_URL}
+
+package:
+  patterns:
+    - "!**"
+    - "!node_modules/**"
+    - output/http.js
+    - output/websocket.js
+    - output/package.json
+
+functions:
+  http:
+    handler: output/http.main
+    events:
+      - httpApi: "*"
+
+  ws_connect:
+    handler: output/websocket.connect
+    events:
+      - websocket:
+          route: $connect
+  ws_disconnect:
+    handler: output/websocket.disconnect
+    events:
+      - websocket:
+          route: $disconnect
+  ws_dispatch:
+    handler: output/websocket.dispatch
+    events:
+      - websocket:
+          route: $default
+
+custom:
+  scriptHooks:
+    before:package:createDeploymentArtifacts: pnpm run package
