@@ -20,13 +20,18 @@ socket.on("open", async () => {
   console.log("open");
 
   for (let i = 0; i < 2; i++) {
-    await setTimeout(1000);
     const message = `${Date.now()}`;
     socket.send(message, {});
+    await setTimeout(1000);
   }
 
+  socket.send("ping", {});
   await setTimeout(1000);
-  socket.close();
+
+  socket.send("close", {});
+  await setTimeout(1000);
+
+  // socket.close();
 });
 
 // send initial packet

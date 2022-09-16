@@ -51,12 +51,15 @@ export const handshake = async (connection: Connection) => {
   });
 };
 
-export const ping = async (connection: Connection, packet: Packet) => {
-  return await post(connection, { type: "pong", data: packet.data });
-};
-
 export const send = async (connection: Connection, data: string) => {
   return await post(connection, { type: "message", data });
+};
+
+export const heartbeat_ping = async (connection: Connection, data?: string) => {
+  return await post(connection, { type: "ping", data });
+};
+export const heartbeat_pong = async (connection: Connection, data?: string) => {
+  return await post(connection, { type: "pong", data });
 };
 
 export const close = async (connection: Connection) => {

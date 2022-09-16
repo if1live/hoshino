@@ -40,12 +40,18 @@ const dispatch_engine: APIGatewayProxyHandler = async (event, context) => {
     case "message": {
       // echo
       const text = parsed.data;
-      await Engine.send(connection, text);
+      if (text === "close") {
+        await Engine.close(connection);
+      } else if (text === "ping") {
+        await Engine.heartbeat_ping(connection, undefined);
+      } else {
+        await Engine.send(connection, text);
+      }
 
       break;
     }
     case "ping": {
-      await Engine.ping(connection, parsed);
+      await Engine.heartbeat_pong(connection, parsed.data);
       break;
     }
     case "close": {
