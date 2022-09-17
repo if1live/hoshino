@@ -1,28 +1,21 @@
 import { APIGatewayProxyHandler, ScheduledHandler } from "aws-lambda";
 import { decodePacket } from "engine.io-parser";
 import { mapLimit } from "async";
-import { deriveEndpoint } from "../engine/helpers.js";
 import { WebSocketHandler } from "./types.js";
-import * as Engine from "../engine/engine.js";
+import { MySocket } from "../engine/engine.js";
 import { ConnectionModel, ConnectionStore } from "../engine/stores.js";
 import { redis } from "../handlers/instances.js";
 import { app } from "../app.js";
 
+const store = new ConnectionStore(redis);
+
 const connect: APIGatewayProxyHandler = async (event, context) => {
-  const connectionId = event.requestContext.connectionId!;
-  const endpoint = deriveEndpoint(event);
-  const ts_now = Date.now();
-  const ts_connect = event.requestContext.connectedAt ?? ts_now;
+  const socket = app.registeSocketListener(MySocket.fromEvent(event, store));
 
-  const model: ConnectionModel = {
-    connectionId,
-    endpoint,
-    ts_connect: ts_connect,
-    ts_touch: ts_connect,
-  };
+  console.log({ tag: "ws_connect", id: socket.id });
 
-  const store = new ConnectionStore(redis);
-  await store.set(model.connectionId, model);
+  const ts_connect = event.requestContext.connectedAt ?? Date.now();
+  await socket.eio_connect(ts_connect);
 
   return {
     statusCode: 200,
@@ -31,19 +24,15 @@ const connect: APIGatewayProxyHandler = async (event, context) => {
 };
 
 const disconnect: APIGatewayProxyHandler = async (event, context) => {
-  const connectionId = event.requestContext.connectionId!;
-  const endpoint = deriveEndpoint(event);
+  const socket = app.registeSocketListener(MySocket.fromEvent(event, store));
 
-  const connection: Engine.Connection = {
-    connectionId,
-    endpoint,
-  };
+  console.log({ tag: "ws_disconnect", id: socket.id });
 
-  const socket = new Engine.Socket(connection);
-  app.handle_close(socket, "blank");
-
-  const store = new ConnectionStore(redis);
-  await store.del(connectionId);
+  // 웹소켓 연결을 지우는건 aws에서 하니까 db에서만 지운다
+  const deleted = await store.del(socket.id);
+  if (deleted) {
+    await socket.listener_close("$disconnect");
+  }
 
   return {
     statusCode: 200,
@@ -52,19 +41,10 @@ const disconnect: APIGatewayProxyHandler = async (event, context) => {
 };
 
 const dispatch: APIGatewayProxyHandler = async (event, context) => {
-  const connectionId = event.requestContext.connectionId!;
-  const endpoint = deriveEndpoint(event);
+  const socket = app.registeSocketListener(MySocket.fromEvent(event, store));
 
   const body = event.body ?? "";
   const parsed = decodePacket(body);
-
-  const connection: Engine.Connection = {
-    connectionId,
-    endpoint,
-  };
-  const socket = new Engine.Socket(connection);
-
-  const store = new ConnectionStore(redis);
 
   switch (parsed.type) {
     case "noop": {
@@ -72,36 +52,36 @@ const dispatch: APIGatewayProxyHandler = async (event, context) => {
       // 그렇다고 연결 이후에 서버에서 알아서 로직을 돌릴수 있는것도 아니다.
       // 이를 우회하려고 noop에 예약어 추가해서 클라에서 웹소켓 연결 즉시 메세지를 보내도록 했다
       if (parsed.data === "handshake") {
-        await Engine.handshake(connection);
-        app.handle_open(socket);
+        await socket.eio_handshake();
+        await app.handle_open(socket);
       }
       break;
     }
     case "message": {
-      await app.handle_message(socket, parsed.data);
+      await socket.listener_message(parsed.data);
       break;
     }
     case "ping": {
-      await store.touch(connectionId, Date.now());
-      await Engine.heartbeat_pong(connection, parsed.data);
+      await store.touch(socket.id, Date.now());
+      await socket.eio_pong(parsed.data);
       break;
     }
     case "pong": {
-      await store.touch(connectionId, Date.now());
+      await store.touch(socket.id, Date.now());
       break;
     }
     case "close": {
-      await socket.close();
+      await socket.eio_close("close packet");
       break;
     }
     case "error": {
       console.log("error", parsed.data);
-      await socket.close();
+      await socket.eio_close("error packet");
       break;
     }
     default: {
       console.log(parsed.type, parsed.data);
-      await socket.close();
+      await socket.eio_close("unhandled packet");
       break;
     }
   }
@@ -113,12 +93,14 @@ const dispatch: APIGatewayProxyHandler = async (event, context) => {
 };
 
 export const schedule: ScheduledHandler = async (event) => {
-  const store = new ConnectionStore(redis);
   const models = await store.dump();
 
+  const ts_now = Date.now();
   await mapLimit(models, 5, async (model: ConnectionModel) => {
-    // engine.io v4는 server에서 ping이 시작된다
-    return await Engine.heartbeat_ping(model, undefined);
+    const socket = app.registeSocketListener(
+      new MySocket(model.connectionId, model.endpoint, store)
+    );
+    await socket.schedule(model, ts_now);
   });
 };
 

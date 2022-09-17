@@ -1,5 +1,12 @@
 import * as eio from "engine.io";
-import { Socket as MySocket } from "./engine/engine.js";
+import { MySocket } from "./engine/engine.js";
+
+function extractSocketId(socket: eio.Socket | MySocket): string {
+  // eio.Socket의 id는 private라서 우회
+  // 소켓 ID를 알면 로그 찍을때 유용하니까
+  const id = (socket as any).id;
+  return id;
+}
 
 const server = new eio.Server({
   cors: {
@@ -9,22 +16,25 @@ const server = new eio.Server({
 
 server.on("connection", (socket) => {
   handle_open(socket);
-  socket.on("message", (data: any) => handle_message(socket, data));
-  socket.on("close", (data: any) => handle_close(socket, data));
+  registeSocketListener(socket);
 });
 
-function extractSocketId(socket: eio.Socket | MySocket): string {
-  const id = (socket as any).id;
-  return id;
+function registeSocketListener(socket: eio.Socket): eio.Socket;
+function registeSocketListener(socket: MySocket): MySocket;
+function registeSocketListener(socket: eio.Socket | MySocket) {
+  socket.on("message", (data: any) => handle_message(socket, data));
+  socket.on("close", (data: any) => handle_close(socket, data));
+  return socket;
 }
 
 async function handle_open(socket: eio.Socket | MySocket) {
   const id = extractSocketId(socket);
-  console.log("eio_connection", id);
+  console.log({ tag: "eio_connection", id });
 }
 
 async function handle_message(socket: eio.Socket | MySocket, data: any) {
-  console.log("eio_message", data);
+  const id = extractSocketId(socket);
+  console.log({ tag: "eio_message", id, data });
 
   // examples-latency: ping -> pong
   if (data === "ping") {
@@ -51,12 +61,11 @@ async function handle_message(socket: eio.Socket | MySocket, data: any) {
 
 async function handle_close(socket: eio.Socket | MySocket, data: any) {
   const id = extractSocketId(socket);
-  console.log("eio_close", JSON.stringify({ id, data }));
+  console.log({ tag: "eio_close", id, data });
 }
 
 export const app = {
   server,
   handle_open,
-  handle_close,
-  handle_message,
+  registeSocketListener,
 };

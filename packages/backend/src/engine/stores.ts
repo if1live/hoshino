@@ -47,8 +47,9 @@ export class ConnectionStore {
     }
   }
 
-  public async del(id: string): Promise<void> {
-    await this.redis.hdel(key, id);
+  public async del(id: string): Promise<boolean> {
+    const result = await this.redis.hdel(key, id);
+    return result > 0;
   }
 
   public async touch(id: string, ts: number): Promise<void> {

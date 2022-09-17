@@ -3,6 +3,17 @@ import { faker } from "@faker-js/faker";
 import { ConnectionModel, ConnectionStore } from "../../src/engine/stores.js";
 import { createMockRedis } from "../tools.js";
 
+function createConnectionModel() {
+  const id = faker.random.alphaNumeric(8);
+  const model: ConnectionModel = {
+    connectionId: id,
+    endpoint: faker.internet.url(),
+    ts_connect: 1000,
+    ts_touch: 1000,
+  };
+  return model;
+}
+
 describe("ConnectionStore", () => {
   const redis = createMockRedis();
   const store = new ConnectionStore(redis);
@@ -12,14 +23,23 @@ describe("ConnectionStore", () => {
     expect(found).toBeNull();
   });
 
+  it("del: not exists", async () => {
+    const result = await store.del("not-exist");
+    expect(result).toBe(false);
+  });
+
+  it("del: exists", async () => {
+    const model = createConnectionModel();
+    const id = model.connectionId;
+    await store.set(id, model);
+
+    const result = await store.del(id);
+    expect(result).toBe(true);
+  });
+
   it("scenario", async () => {
-    const id = faker.random.alphaNumeric(8);
-    const model: ConnectionModel = {
-      connectionId: id,
-      endpoint: faker.internet.url(),
-      ts_connect: 1000,
-      ts_touch: 1000,
-    };
+    const model = createConnectionModel();
+    const id = model.connectionId;
 
     await store.set(id, model);
 
@@ -31,13 +51,8 @@ describe("ConnectionStore", () => {
   });
 
   it("touch", async () => {
-    const id = faker.random.alphaNumeric(8);
-    const model: ConnectionModel = {
-      connectionId: id,
-      endpoint: faker.internet.url(),
-      ts_connect: 1000,
-      ts_touch: 1000,
-    };
+    const model = createConnectionModel();
+    const id = model.connectionId;
     await store.set(id, model);
 
     const ts_next = 1234;
@@ -51,17 +66,6 @@ describe("ConnectionStore", () => {
 describe("ConnectionStore#dump", () => {
   const redis = createMockRedis(faker.internet.port());
   const store = new ConnectionStore(redis);
-
-  function createConnectionModel() {
-    const id = faker.random.alphaNumeric(8);
-    const model: ConnectionModel = {
-      connectionId: id,
-      endpoint: faker.internet.url(),
-      ts_connect: 1000,
-      ts_touch: 1000,
-    };
-    return model;
-  }
 
   // hscan으로 여러번 가져오는거 확인하려고 큰수 넣음
   const models = Array.from({ length: 2345 }).map((x) =>
