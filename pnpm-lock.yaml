@@ -25,6 +25,7 @@ importers:
   packages/backend:
     specifiers:
       '@aws-sdk/client-apigatewaymanagementapi': ^3.171.0
+      '@faker-js/faker': ^7.5.0
       '@tinyhttp/dotenv': ^2.0.4
       '@types/async': ^3.2.15
       '@types/aws-lambda': ^8.10.104
@@ -47,6 +48,7 @@ importers:
       engine.io-parser: 5.0.4
       ioredis: 5.2.3
     devDependencies:
+      '@faker-js/faker': 7.5.0
       '@tinyhttp/dotenv': 2.0.4
       '@types/async': 3.2.15
       '@types/aws-lambda': 8.10.104
@@ -743,6 +745,11 @@ packages:
     requiresBuild: true
     dev: true
     optional: true
+
+  /@faker-js/faker/7.5.0:
+    resolution: {integrity: sha512-8wNUCCUHvfvI0gQpDUho/3gPzABffnCn5um65F8dzQ86zz6dlt4+nmAA7PQUc8L+eH+9RgR/qzy5N/8kN0Ozdw==}
+    engines: {node: '>=14.0.0', npm: '>=6.0.0'}
+    dev: true
 
   /@ioredis/as-callback/3.0.0:
     resolution: {integrity: sha512-Kqv1rZ3WbgOrS+hgzJ5xG5WQuhvzzSTRYvNeyPMLOAM78MHSnuKI20JeJGbpuAt//LCuP0vsexZcorqW7kWhJg==}

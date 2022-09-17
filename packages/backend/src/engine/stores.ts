@@ -22,8 +22,19 @@ export class ConnectionStore {
   constructor(private readonly redis: Redis) {}
 
   public async set(id: string, model: ConnectionModel): Promise<void> {
-    const value = JSON.stringify(model);
-    await this.redis.hset(key, id, value);
+    if (id !== model.connectionId) {
+      throw new Error("invalid input");
+    }
+    await this.mset([model]);
+  }
+
+  public async mset(models: ConnectionModel[]): Promise<void> {
+    const args: string[] = [];
+    for (const model of models) {
+      args.push(model.connectionId);
+      args.push(JSON.stringify(model));
+    }
+    await this.redis.hset(key, ...args);
   }
 
   public async get(id: string): Promise<ConnectionModel | null> {
