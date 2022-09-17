@@ -1,2 +1,3 @@
 packages:
   - packages/backend
+  - packages/examples-latency
