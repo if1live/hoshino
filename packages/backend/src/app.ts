@@ -29,11 +29,13 @@ async function handle_message(socket: eio.Socket | MySocket, data: any) {
   // examples-latency: ping -> pong
   if (data === "ping") {
     await socket.send("pong", {});
+    return;
   }
 
   // custom command
   if (data === "command:close") {
     await socket.close();
+    return;
   }
 
   // if (data === "command:info") {
