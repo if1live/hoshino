@@ -65,13 +65,16 @@ const dispatch_engine: APIGatewayProxyHandler = async (event, context) => {
     }
     case "message": {
       const text = parsed.data;
-      if (text === "close") {
+      if (text === "command:close") {
         await Engine.close(connection);
-      } else if (text === "ping") {
+      } else if (text === "command:ping") {
         await Engine.heartbeat_ping(connection, undefined);
-      } else if (text === "info") {
+      } else if (text === "command:info") {
         const model = await store.get(connectionId);
         await Engine.send(connection, JSON.stringify(model));
+      } else if (text === "ping") {
+        // examples-latency: ping -> pong
+        await Engine.send(connection, "pong");
       } else {
         await Engine.send(connection, text);
       }

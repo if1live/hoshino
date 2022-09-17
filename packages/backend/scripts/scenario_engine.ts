@@ -4,8 +4,9 @@ import { setTimeout } from "node:timers/promises";
 
 dotenv.config();
 
-const socket = new eio.Socket(host, {
-  path: "/main",
+const url = new URL(process.env.WS_URL!);
+const socket = new eio.Socket(url.origin, {
+  path: url.pathname !== "/" ? url.pathname : undefined,
   transports: ["websocket"],
 });
 
@@ -19,7 +20,7 @@ socket.on("close", (data) => console.log("close", data));
 socket.on("open", async () => {
   console.log("open");
 
-  socket.send("info", {});
+  socket.send("command:info", {});
   await setTimeout(1000);
 
   for (let i = 0; i < 2; i++) {
@@ -28,13 +29,16 @@ socket.on("open", async () => {
     await setTimeout(1000);
   }
 
+  socket.send("command:ping", {});
+  await setTimeout(1000);
+
+  socket.send("command:info", {});
+  await setTimeout(1000);
+
   socket.send("ping", {});
   await setTimeout(1000);
 
-  socket.send("info", {});
-  await setTimeout(1000);
-
-  socket.send("close", {});
+  socket.send("command:close", {});
   await setTimeout(1000);
 
   // socket.close();
