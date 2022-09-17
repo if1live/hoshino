@@ -5,6 +5,7 @@ import { WebSocketHandler } from "./types.js";
 import * as Engine from "../engine/engine.js";
 import { ConnectionModel, ConnectionStore } from "../engine/stores.js";
 import { redis } from "../handlers/instances.js";
+import { app } from "../app.js";
 
 const connect_engine: APIGatewayProxyHandler = async (event, context) => {
   const connectionId = event.requestContext.connectionId!;
@@ -30,6 +31,16 @@ const connect_engine: APIGatewayProxyHandler = async (event, context) => {
 
 const disconnect_engine: APIGatewayProxyHandler = async (event, context) => {
   const connectionId = event.requestContext.connectionId!;
+  const endpoint = deriveEndpoint(event);
+
+  const connection: Engine.Connection = {
+    connectionId,
+    endpoint,
+  };
+
+  const socket = new Engine.Socket(connection);
+  app.handle_close(socket, "blank");
+
   const store = new ConnectionStore(redis);
   await store.del(connectionId);
 
@@ -50,6 +61,7 @@ const dispatch_engine: APIGatewayProxyHandler = async (event, context) => {
     connectionId,
     endpoint,
   };
+  const socket = new Engine.Socket(connection);
 
   const store = new ConnectionStore(redis);
 
@@ -60,24 +72,12 @@ const dispatch_engine: APIGatewayProxyHandler = async (event, context) => {
       // 이를 우회하려고 noop에 예약어 추가해서 클라에서 웹소켓 연결 즉시 메세지를 보내도록 했다
       if (parsed.data === "handshake") {
         await Engine.handshake(connection);
+        app.handle_open(socket);
       }
       break;
     }
     case "message": {
-      const text = parsed.data;
-      if (text === "command:close") {
-        await Engine.close(connection);
-      } else if (text === "command:ping") {
-        await Engine.heartbeat_ping(connection, undefined);
-      } else if (text === "command:info") {
-        const model = await store.get(connectionId);
-        await Engine.send(connection, JSON.stringify(model));
-      } else if (text === "ping") {
-        // examples-latency: ping -> pong
-        await Engine.send(connection, "pong");
-      } else {
-        await Engine.send(connection, text);
-      }
+      await app.handle_message(socket, parsed.data);
       break;
     }
     case "ping": {
@@ -90,17 +90,17 @@ const dispatch_engine: APIGatewayProxyHandler = async (event, context) => {
       break;
     }
     case "close": {
-      await Engine.close(connection);
+      await socket.close();
       break;
     }
     case "error": {
       console.log("error", parsed.data);
-      await Engine.close(connection);
+      await socket.close();
       break;
     }
     default: {
       console.log(parsed.type, parsed.data);
-      await Engine.close(connection);
+      await socket.close();
       break;
     }
   }

@@ -51,10 +51,6 @@ export const handshake = async (connection: Connection) => {
   });
 };
 
-export const send = async (connection: Connection, data: string) => {
-  return await post(connection, { type: "message", data });
-};
-
 export const heartbeat_ping = async (connection: Connection, data?: string) => {
   return await post(connection, { type: "ping", data });
 };
@@ -62,12 +58,24 @@ export const heartbeat_pong = async (connection: Connection, data?: string) => {
   return await post(connection, { type: "pong", data });
 };
 
-export const close = async (connection: Connection) => {
-  const { connectionId, endpoint } = connection;
-  const client = new ApiGatewayManagementApiClient({ endpoint });
-  return await client.send(
-    new DeleteConnectionCommand({
-      ConnectionId: connectionId,
-    })
-  );
-};
+export class Socket {
+  constructor(private readonly connection: Connection) {}
+
+  public get id() {
+    return this.connection.connectionId;
+  }
+
+  public async send(data: string, options: any) {
+    return await post(this.connection, { type: "message", data });
+  }
+
+  public async close() {
+    const { connectionId, endpoint } = this.connection;
+    const client = new ApiGatewayManagementApiClient({ endpoint });
+    return await client.send(
+      new DeleteConnectionCommand({
+        ConnectionId: connectionId,
+      })
+    );
+  }
+}
