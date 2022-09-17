@@ -33,10 +33,13 @@ function render() {
 
 // socket
 const url = new URL(import.meta.env.VITE_WS_URL);
-const socket = new eio.Socket(url.origin, {
-  path: url.pathname !== "/" ? url.pathname : undefined,
+const opts = {
   transports: ["websocket"],
-});
+};
+if (url.pathname !== "/") {
+  opts["path"] = url.pathname;
+}
+const socket = new eio.Socket(url.origin, opts);
 
 // hack: send initial packet
 const ws = socket.transport.ws;
