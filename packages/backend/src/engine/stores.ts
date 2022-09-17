@@ -16,22 +16,18 @@ export interface ConnectionModel {
   ts_touch: number;
 }
 
-function createKey(id: string) {
-  return `connection:${id}`;
-}
+const key = "eio:connection";
 
 export class ConnectionStore {
   constructor(private readonly redis: Redis) {}
 
   public async set(id: string, model: ConnectionModel): Promise<void> {
-    const key = createKey(id);
     const value = JSON.stringify(model);
-    await this.redis.setex(key, WS_CONNECTION_DURATION_SECONDS, value);
+    await this.redis.hset(key, id, value);
   }
 
   public async get(id: string): Promise<ConnectionModel | null> {
-    const key = createKey(id);
-    const value = await this.redis.get(key);
+    const value = await this.redis.hget(key, id);
     if (value) {
       const obj = JSON.parse(value);
       return obj as ConnectionModel;
@@ -41,8 +37,7 @@ export class ConnectionStore {
   }
 
   public async del(id: string): Promise<void> {
-    const key = createKey(id);
-    await this.redis.del(key);
+    await this.redis.hdel(key, id);
   }
 
   public async touch(id: string, ts: number): Promise<void> {
@@ -55,8 +50,32 @@ export class ConnectionStore {
       ...prev,
       ts_touch: ts,
     };
-    const key = createKey(id);
-    const text = JSON.stringify(next);
-    await this.redis.set(key, text, "KEEPTTL");
+    await this.set(id, next);
+  }
+
+  public async dump(): Promise<ConnectionModel[]> {
+    const models: ConnectionModel[] = [];
+    let cursor = "0";
+    while (true) {
+      const result = await this.redis.hscan(key, cursor, "COUNT", 1000);
+      const [nextCursor, elements] = result;
+
+      for (let i = 0; i < elements.length; i++) {
+        if (i % 2 === 0) {
+          const id = elements[i];
+        } else {
+          const obj = JSON.parse(elements[i]);
+          const model = obj as ConnectionModel;
+          models.push(model);
+        }
+      }
+
+      cursor = nextCursor;
+      if (nextCursor === "0") {
+        break;
+      }
+    }
+
+    return models;
   }
 }

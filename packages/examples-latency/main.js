@@ -74,3 +74,8 @@ socket.on("message", () => {
   // setTimeout(send, 100);
   setTimeout(send, 1000);
 });
+
+socket.on("error", () => {
+  if (smoothie) smoothie.stop();
+  $("transport").innerHTML = "(error)";
+});

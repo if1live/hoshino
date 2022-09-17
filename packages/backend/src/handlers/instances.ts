@@ -1,5 +1,6 @@
 import type { Handler } from "aws-lambda";
 import { default as Redis } from "ioredis";
+import { setTimeout } from "node:timers/promises";
 
 const REDIS_URL = process.env.REDIS_URL!;
 const url = new URL(REDIS_URL);
@@ -27,6 +28,8 @@ export const wrapHandler_redis = <T1, T2>(
     // redis.disconnect는 리턴이 Promise가 아니다
     // 문서상에서 즉시 끊어진다고 되어있지만 약간 밀리는 느낌?
     await redis.quit();
+    await setTimeout(10);
+
     return result as any;
   };
 };

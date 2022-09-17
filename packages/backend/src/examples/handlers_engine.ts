@@ -1,5 +1,6 @@
-import { APIGatewayProxyHandler } from "aws-lambda";
+import { APIGatewayProxyHandler, ScheduledHandler } from "aws-lambda";
 import { decodePacket } from "engine.io-parser";
+import { mapLimit } from "async";
 import { deriveEndpoint } from "../engine/helpers.js";
 import { WebSocketHandler } from "./types.js";
 import * as Engine from "../engine/engine.js";
@@ -7,7 +8,7 @@ import { ConnectionModel, ConnectionStore } from "../engine/stores.js";
 import { redis } from "../handlers/instances.js";
 import { app } from "../app.js";
 
-const connect_engine: APIGatewayProxyHandler = async (event, context) => {
+const connect: APIGatewayProxyHandler = async (event, context) => {
   const connectionId = event.requestContext.connectionId!;
   const endpoint = deriveEndpoint(event);
   const ts_now = Date.now();
@@ -29,7 +30,7 @@ const connect_engine: APIGatewayProxyHandler = async (event, context) => {
   };
 };
 
-const disconnect_engine: APIGatewayProxyHandler = async (event, context) => {
+const disconnect: APIGatewayProxyHandler = async (event, context) => {
   const connectionId = event.requestContext.connectionId!;
   const endpoint = deriveEndpoint(event);
 
@@ -50,7 +51,7 @@ const disconnect_engine: APIGatewayProxyHandler = async (event, context) => {
   };
 };
 
-const dispatch_engine: APIGatewayProxyHandler = async (event, context) => {
+const dispatch: APIGatewayProxyHandler = async (event, context) => {
   const connectionId = event.requestContext.connectionId!;
   const endpoint = deriveEndpoint(event);
 
@@ -111,8 +112,19 @@ const dispatch_engine: APIGatewayProxyHandler = async (event, context) => {
   };
 };
 
+export const schedule: ScheduledHandler = async (event) => {
+  const store = new ConnectionStore(redis);
+  const models = await store.dump();
+
+  await mapLimit(models, 5, async (model: ConnectionModel) => {
+    // engine.io v4는 server에서 ping이 시작된다
+    return await Engine.heartbeat_ping(model, undefined);
+  });
+};
+
 export const handlers_engine: WebSocketHandler = {
-  connect: connect_engine,
-  disconnect: disconnect_engine,
-  dispatch: dispatch_engine,
+  connect,
+  disconnect,
+  dispatch,
+  schedule,
 };

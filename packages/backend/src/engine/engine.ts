@@ -21,8 +21,8 @@ export interface Handshake {
 
 const defaultHandshake: Omit<Handshake, "sid"> = {
   upgrades: [""],
-  pingTimeout: 20000,
-  pingInterval: 25000,
+  pingTimeout: 60000 + 20000,
+  pingInterval: 60000 + 25000,
   maxPayload: 1e6,
 };
 

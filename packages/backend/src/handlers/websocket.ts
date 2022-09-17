@@ -8,3 +8,4 @@ export const handlers = handlers_engine;
 export const connect = wrapHandler_redis(handlers.connect);
 export const disconnect = wrapHandler_redis(handlers.disconnect);
 export const dispatch = wrapHandler_redis(handlers.dispatch);
+export const schedule = wrapHandler_redis(handlers.schedule);

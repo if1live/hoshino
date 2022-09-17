@@ -57,6 +57,10 @@ functions:
     events:
       - websocket:
           route: $default
+  ws_schedule:
+    handler: output/websocket.schedule
+    events:
+      - schedule: rate(1 minute)
 
 custom:
   scriptHooks:

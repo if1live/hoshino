@@ -1,4 +1,4 @@
-import type { APIGatewayProxyHandler } from "aws-lambda";
+import type { APIGatewayProxyHandler, ScheduledHandler } from "aws-lambda";
 import {
   ApiGatewayManagementApiClient,
   PostToConnectionCommand,
@@ -45,8 +45,11 @@ const dispatch_naive: APIGatewayProxyHandler = async (event) => {
   };
 };
 
+const schedule_naive: ScheduledHandler = async (event) => {};
+
 export const handlers_naive: WebSocketHandler = {
   connect: connect_naive,
   disconnect: disconnect_naive,
   dispatch: dispatch_naive,
+  schedule: schedule_naive,
 };
