@@ -48,9 +48,9 @@ socket.on("open", async () => {
 });
 
 // send initial packet
-const ws: WebSocket = socket.transport.ws;
-const fn_onopen_initial = ws.onopen!.bind(ws);
-ws.onopen = async () => {
-  ws.send("6handshake");
-  await fn_onopen_initial();
-};
+// const ws: WebSocket = socket.transport.ws;
+// const fn_onopen_initial = ws.onopen!.bind(ws);
+// ws.onopen = async () => {
+//   ws.send("6handshake");
+//   await fn_onopen_initial();
+// };
