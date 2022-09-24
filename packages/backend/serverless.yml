@@ -94,8 +94,8 @@ functions:
             Fn::GetAtt:
               - TaskQueue
               - Arn
-          # https://aws.amazon.com/ko/about-aws/whats-new/2019/11/aws-lambda-supports-max-retry-attempts-event-age-asynchronous-invocations/?nc1=h_ls
-          maximumRetryAttempts: 0
+    # https://aws.amazon.com/ko/about-aws/whats-new/2019/11/aws-lambda-supports-max-retry-attempts-event-age-asynchronous-invocations/?nc1=h_ls
+    maximumRetryAttempts: 0
 
 resources:
   Resources:
