@@ -15,7 +15,7 @@ import {
   ConnectionStore_Redis,
   ConnectionStore_DynamoDB,
 } from "../engine/stores.js";
-import { dynamodb, redis, sqs } from "../handlers/instances.js";
+import { dynamodb, sqs } from "../handlers/instances.js";
 import { app } from "../app.js";
 import {
   SendMessageBatchCommand,

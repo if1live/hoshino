@@ -5,7 +5,7 @@ import {
   PutItemCommand,
   UpdateItemCommand,
 } from "@aws-sdk/client-dynamodb";
-import { Redis } from "ioredis";
+import type { Redis } from "ioredis";
 
 // https://docs.aws.amazon.com/ko_kr/apigateway/latest/developerguide/limits.html
 
