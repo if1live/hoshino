@@ -98,10 +98,13 @@ export class ConnectionStore_DynamoDB implements ConnectionStore {
       ReturnValues: "ALL_OLD",
     });
     const output = await this.client.send(command);
-    console.log("del", output);
-
-    const wcu = output.ConsumedCapacity?.WriteCapacityUnits ?? 0;
-    return wcu > 0;
+    // ReturnValues: "ALL_OLD"를 사용해서 지우기 이전 값을 output.Attributes로 받을수 있다
+    // output.Attributes가 undefined면 없는 항목을 지우려고 한거
+    if (output.Attributes) {
+      return true;
+    } else {
+      return false;
+    }
   }
 
   public async touch(id: string, seconds: number): Promise<void> {
@@ -117,7 +120,7 @@ export class ConnectionStore_DynamoDB implements ConnectionStore {
       },
     });
     const output = await this.client.send(command);
-    console.log("touch", output);
+    // console.log("touch", output);
   }
 }
 
