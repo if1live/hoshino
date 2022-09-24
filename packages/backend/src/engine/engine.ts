@@ -27,8 +27,8 @@ export interface Handshake {
 
 export const defaultHandshake: Omit<Handshake, "sid"> = {
   upgrades: [""],
-  pingTimeout: 60000 + 20000,
-  pingInterval: 60000 + 25000,
+  pingTimeout: 20000,
+  pingInterval: 25000,
   maxPayload: 1e6,
 };
 
@@ -111,14 +111,15 @@ export class MySocket {
     }
   }
 
-  public async eio_connect(ts: number) {
+  public async eio_connect(ts: number): Promise<ConnectionModel> {
     const model: ConnectionModel = {
       connectionId: this.connectionId,
       endpoint: this.endpoint,
-      ts_connect: ts,
-      ts_touch: ts,
+      seconds_connect: ts,
+      seconds_touch: ts,
     };
     await this.store.set(model.connectionId, model);
+    return model;
   }
 
   public async eio_handshake() {
@@ -151,7 +152,7 @@ export class MySocket {
 
     await this.store.del(this.id);
     await this.naive_delete();
-    
+
     await this.listener_close(reason);
   }
 
@@ -222,21 +223,23 @@ export class MySocket {
 
   public async schedule(
     model: ConnectionModel,
-    ts_now: number
+    seconds_now: number
   ): Promise<"dead" | "timeout" | "ping"> {
     // aws websocket api 연결은 영원히 지속될수 없다.
     // 제한 시간을 넘은 연결은 죽은거로 판단하고 지운다
     // AWS에서 웹소켓 연결을 무효화했을테니 store만 갱신해도 문제 없다
-    const ts_deadline =
-      model.ts_connect + WS_CONNECTION_DURATION_SECONDS * 1000;
-    if (ts_now > ts_deadline) {
+    const seconds_deadline =
+      model.seconds_connect + WS_CONNECTION_DURATION_SECONDS;
+    if (seconds_now > seconds_deadline) {
       await this.store.del(this.id);
-      await this.listener_close("connection dead");
+      await this.listener_close("server shutting down");
       return "dead";
     }
 
-    const ts_keepalive = model.ts_touch + defaultHandshake.pingTimeout;
-    if (ts_now > ts_keepalive) {
+    const duration =
+      (defaultHandshake.pingTimeout + defaultHandshake.pingInterval) / 1000.0;
+    const seconds_keepalive = model.seconds_touch + duration;
+    if (seconds_now > seconds_keepalive) {
       await this.eio_close("ping timeout");
       return "timeout";
     }

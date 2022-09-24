@@ -12,8 +12,8 @@ const __dirname = '.';
 const common: esbuild.BuildOptions = {
   // 클래스 이름이 뭉개지면 문제가 생길수 있다
   minifyIdentifiers: false,
-  minifySyntax: false,
-  minifyWhitespace: false,
+  minifySyntax: true,
+  minifyWhitespace: true,
   bundle: true,
   sourcemap: true,
   treeShaking: true,

@@ -28,6 +28,27 @@ provider:
 
     REDIS_URL: ${env:REDIS_URL}
 
+  iam:
+    role:
+      statements:
+        - Effect: "Allow"
+          Action:
+            - "sqs:SendMessage"
+          Resource:
+            - arn:aws:sqs:${self:provider.region}:*:${self:service}-${self:provider.stage}-task
+        - Effect: "Allow"
+          Action:
+            - "execute-api:ManageConnections"
+          Resource: "*"
+        - Effect: "Allow"
+          Action:
+            - "dynamodb:GetItem"
+            - "dynamodb:PutItem"
+            - "dynamodb:DeleteItem"
+            - "dynamodb:UpdateItem"
+          Resource:
+            - arn:aws:dynamodb:${self:provider.region}:${aws:accountId}:table/ConnectionIds
+
 package:
   patterns:
     - "!**"
@@ -57,10 +78,47 @@ functions:
     events:
       - websocket:
           route: $default
+
   ws_schedule:
     handler: output/websocket.schedule
     events:
-      - schedule: rate(1 minute)
+      - schedule:
+          rate: rate(1 minute)
+          enabled: false
+
+  ws_task:
+    handler: output/websocket.handle_task
+    events:
+      - sqs:
+          arn:
+            Fn::GetAtt:
+              - TaskQueue
+              - Arn
+          # https://aws.amazon.com/ko/about-aws/whats-new/2019/11/aws-lambda-supports-max-retry-attempts-event-age-asynchronous-invocations/?nc1=h_ls
+          maximumRetryAttempts: 0
+
+resources:
+  Resources:
+    TaskQueue:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: ${self:service}-${self:provider.stage}-task
+    ConnectionTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ConnectionIds
+        AttributeDefinitions:
+          - AttributeName: connectionId
+            AttributeType: S
+        KeySchema:
+          - AttributeName: connectionId
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 2
+          WriteCapacityUnits: 2
+        TimeToLiveSpecification:
+          AttributeName: seconds_ttl
+          Enabled: false
 
 custom:
   scriptHooks:

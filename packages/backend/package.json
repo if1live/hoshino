@@ -17,9 +17,12 @@
   },
   "dependencies": {
     "@aws-sdk/client-apigatewaymanagementapi": "^3.171.0",
+    "@aws-sdk/client-dynamodb": "^3.178.0",
+    "@aws-sdk/client-sqs": "^3.178.0",
     "async": "^3.2.4",
     "engine.io-parser": "^5.0.4",
-    "ioredis": "^5.2.3"
+    "ioredis": "^5.2.3",
+    "nanoid": "^4.0.0"
   },
   "devDependencies": {
     "@faker-js/faker": "^7.5.0",

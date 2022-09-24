@@ -15,7 +15,7 @@ async function main() {
   ws.onopen = () => {
     console.log(`open	${Date.now()}`);
 
-    ws.send(`ping`);
+    ws.send(`4ping`);
     console.log(`ping	${Date.now()}`);
   };
 

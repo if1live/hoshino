@@ -1,6 +1,10 @@
 import { expect } from "expect";
 import { faker } from "@faker-js/faker";
-import { ConnectionModel, ConnectionStore } from "../../src/engine/stores.js";
+import {
+  ConnectionModel,
+  ConnectionStore,
+  ConnectionStore_Redis,
+} from "../../src/engine/stores.js";
 import { createMockRedis } from "../tools.js";
 
 function createConnectionModel() {
@@ -8,15 +12,15 @@ function createConnectionModel() {
   const model: ConnectionModel = {
     connectionId: id,
     endpoint: faker.internet.url(),
-    ts_connect: 1000,
-    ts_touch: 1000,
+    seconds_connect: 1000,
+    seconds_touch: 1000,
   };
   return model;
 }
 
 describe("ConnectionStore", () => {
   const redis = createMockRedis();
-  const store = new ConnectionStore(redis);
+  const store = new ConnectionStore_Redis(redis);
 
   it("get: not exist", async () => {
     const found = await store.get("invalid");
@@ -59,13 +63,13 @@ describe("ConnectionStore", () => {
     await store.touch(id, ts_next);
 
     const found = await store.get(id);
-    expect(found?.ts_touch).toBe(ts_next);
+    expect(found?.seconds_touch).toBe(ts_next);
   });
 });
 
 describe("ConnectionStore#dump", () => {
   const redis = createMockRedis(faker.internet.port());
-  const store = new ConnectionStore(redis);
+  const store = new ConnectionStore_Redis(redis);
 
   // hscan으로 여러번 가져오는거 확인하려고 큰수 넣음
   const models = Array.from({ length: 2345 }).map((x) =>

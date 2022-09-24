@@ -4,7 +4,6 @@ import {
   PostToConnectionCommand,
 } from "@aws-sdk/client-apigatewaymanagementapi";
 import { deriveEndpoint } from "../engine/helpers.js";
-import { WebSocketHandler } from "./types.js";
 
 const connect_naive: APIGatewayProxyHandler = async (event, context) => {
   const connectionId = event.requestContext.connectionId;
@@ -47,7 +46,7 @@ const dispatch_naive: APIGatewayProxyHandler = async (event) => {
 
 const schedule_naive: ScheduledHandler = async (event) => {};
 
-export const handlers_naive: WebSocketHandler = {
+export const handlers_naive = {
   connect: connect_naive,
   disconnect: disconnect_naive,
   dispatch: dispatch_naive,

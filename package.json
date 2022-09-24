@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "license": "ISC",
   "author": "",
+  "sideEffects": false,
   "type": "module",
   "main": "index.js",
   "scripts": {

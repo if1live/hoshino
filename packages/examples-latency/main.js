@@ -42,12 +42,12 @@ if (url.pathname !== "/") {
 const socket = new eio.Socket(url.origin, opts);
 
 // hack: send initial packet
-const ws = socket.transport.ws;
-const fn_onopen_initial = ws.onopen?.bind(ws);
-ws.onopen = async () => {
-  ws.send("6handshake");
-  await fn_onopen_initial();
-};
+// const ws = socket.transport.ws;
+// const fn_onopen_initial = ws.onopen?.bind(ws);
+// ws.onopen = async () => {
+//   ws.send("6handshake");
+//   await fn_onopen_initial();
+// };
 
 let last;
 function send() {

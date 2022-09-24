@@ -1,9 +1,14 @@
 import type { Handler } from "aws-lambda";
+import { SQSClient } from "@aws-sdk/client-sqs";
+import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import { default as Redis } from "ioredis";
 import { setTimeout } from "node:timers/promises";
 
 const REDIS_URL = process.env.REDIS_URL!;
 const url = new URL(REDIS_URL);
+
+export const sqs = new SQSClient({});
+export const dynamodb = new DynamoDBClient({});
 
 // typescript 4.8에서 에러 발생. 4.7로는 되는거같은데?
 export const redis: Redis.Redis = new (Redis as any)({
