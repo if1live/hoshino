@@ -1,0 +1,16 @@
+{
+  "name": "eio-plain",
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "start:server": "tsx server.ts"
+  },
+  "dependencies": {
+    "engine.io": "^6.5.4",
+    "engine.io-client": "^4.1.4"
+  },
+  "devDependencies": {
+    "tsx": "^4.7.0",
+    "ws": "^8.16.0"
+  }
+}

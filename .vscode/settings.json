@@ -3,6 +3,9 @@
     "editor.formatOnSave": true,
     "editor.defaultFormatter": "biomejs.biome"
   },
+  "[javascript]": {
+    "editor.defaultFormatter": "biomejs.biome"
+  },
   "[liquid]": {
     "editor.formatOnSave": true
   },
@@ -10,5 +13,10 @@
     "quickfix.biome": "explicit",
     "source.organizeImports.biome": "explicit"
   },
-  "typescript.preferences.importModuleSpecifier": "project-relative"
+  "typescript.preferences.importModuleSpecifier": "project-relative",
+  "workbench.colorCustomizations": {
+    "activityBar.background": "#342847",
+    "titleBar.activeBackground": "#483764",
+    "titleBar.activeForeground": "#FCFBFD"
+  }
 }
