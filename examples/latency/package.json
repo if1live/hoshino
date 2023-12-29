@@ -1,6 +1,10 @@
 {
   "name": "eio-latency",
   "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "node index.mjs"
+  },
   "dependencies": {
     "enchilada": "0.13.0",
     "engine.io": "^6.4.2",

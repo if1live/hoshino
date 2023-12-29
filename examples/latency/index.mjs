@@ -1,13 +1,19 @@
-
 /**
  * Module dependencies.
  */
 
-const express = require('express');
+import http from 'node:http';
+import { dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import express from 'express';
+import enchilada from 'enchilada';
+import * as eio from 'engine.io';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+
 const app = express();
-const server = require('http').createServer(app);
-const enchilada = require('enchilada');
-const io = require('engine.io').attach(server);
+const server = http.createServer(app);
+const io = eio.attach(server);
 
 app.use(enchilada({
   src: __dirname + '/public',
@@ -16,10 +22,6 @@ app.use(enchilada({
 app.use(express.static(__dirname + '/public'));
 app.get('/', (req, res) => {
   res.sendFile(__dirname + '/index.html');
-});
-
-app.get('/engine.io.min.js', (req, res) => {
-  res.sendFile(require.resolve('engine.io-client/dist/engine.io.min.js'));
 });
 
 io.on('connection', (socket) => {

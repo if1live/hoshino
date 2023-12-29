@@ -3,8 +3,8 @@
  * Module dependencies.
  */
 
-const SmoothieChart = require('smoothie').SmoothieChart;
-const TimeSeries = require('smoothie').TimeSeries;
+// const SmoothieChart = require('smoothie').SmoothieChart;
+// const TimeSeries = require('smoothie').TimeSeries;
 
 // helper
 
