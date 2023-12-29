@@ -20,7 +20,7 @@ io.on("connection", async (socket) => {
     readyState: socket.readyState,
   });
 
-  socket.on("handshake", () => console.log("handshake"));
+  socket.on("heartbeat", () => console.log("heartbeat"));
 
   /** Fired when the client sends a message. */
   socket.on("message", (data: string | Buffer) => {
