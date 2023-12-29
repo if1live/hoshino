@@ -1,4 +1,5 @@
 import { setTimeout } from "node:timers/promises";
+import { SendMessageCommand } from "@aws-sdk/client-sqs";
 import {
   APIGatewayProxyEvent,
   APIGatewayProxyHandler,
@@ -10,7 +11,13 @@ import { Packet, decodePacket, encodePacket } from "engine.io-parser";
 import { apps } from "../apps.js";
 import { MySocket, MySocketPolicy } from "../engine/MySocket.js";
 import { encodePacketAsync } from "../engine/helpers.js";
-import { Handshake, defaultHandshake } from "../engine/types.js";
+import {
+  Command_Handshake,
+  Command_Schedule,
+  Handshake,
+  defaultHandshake,
+} from "../engine/types.js";
+import { createQueueUrl, sqsClient, sqsEndpoint } from "../instances/aws.js";
 import { redis } from "../instances/redis.js";
 import {
   ConnectionAction,
@@ -119,7 +126,6 @@ const fn_connect = async (
   const connectionId = event.requestContext.connectionId ?? "";
   const requestAt = new Date(event.requestContext.requestTimeEpoch);
   const endpoint = deriveEndpoint(event);
-  const sock = new MySocket(connectionId, endpoint);
 
   // TODO: 핸들러로 빠져야한다
   console.log("connect", { connectionId });
@@ -134,21 +140,24 @@ const fn_connect = async (
   };
   await repo.setAsync(redis, model);
 
-  const handshake: Handshake = {
-    sid: connectionId,
-    ...defaultHandshake,
+  // 람다에서는 웹소켓 connect에서 자신한테 메세지를 보낼 경우 410 gone이 발생한다.
+  // 클라의 onopen에서 패킷 하나 보내서 서버 로직을 돌리는것도 생각했으나 engine.io 명세와 달라진다.
+  // SQS 핸들러를 무료처럼 쓸수 있게 되어서 그냥 SQS로 때웠다.
+  // connect 붙은 다음에 SQS가 돌아가도록 적당히 시간 손대면 되지 않을까?
+  const command: Command_Handshake = {
+    tag: "handshake",
+    connectionId,
+    endpoint,
+    ts_connect: model.ts_connect,
   };
-
-  // TODO: connect 즉시 메세지를 보내는 방법이 필요하다!
-  // aws websocket api는 설계 제약때문에 connect에서 메세지를 보낼수 없다!
-  setTimeout(10).then(async () => {
-    const packet = {
-      type: "open",
-      data: JSON.stringify(handshake),
-    } as const;
-    const encoded = await encodePacketAsync(packet);
-    await sock.send(encoded, { wsPreEncoded: encoded });
-  });
+  const queueName = `hoshino-${settings.STAGE}-ws`;
+  const queueUrl = createQueueUrl(sqsEndpoint, queueName);
+  const output = await sqsClient.send(
+    new SendMessageCommand({
+      QueueUrl: queueUrl,
+      MessageBody: JSON.stringify(command),
+    }),
+  );
 
   return {
     statusCode: 200,

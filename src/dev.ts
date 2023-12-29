@@ -21,7 +21,7 @@ const definitions: FunctionDefinition[] = [
     events: [
       {
         sqs: {
-          queueName: `hoshino-example-${settings.STAGE}`,
+          queueName: `hoshino-${settings.STAGE}-ws`,
           batchSize: 1,
           enabled: true,
         },
