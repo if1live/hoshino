@@ -1,0 +1,71 @@
+service: hoshino
+
+useDotenv: true
+
+plugins:
+  - serverless-scriptable-plugin
+
+provider:
+  name: aws
+  runtime: nodejs20.x
+
+  region: ap-northeast-1
+  stage: dev
+
+  memorySize: 512
+  architecture: arm64
+
+  logRetentionInDays: 1
+  versionFunctions: false
+
+  apiGateway:
+    minimumCompressionSize: 1024 # Enable gzip compression for responses > 1 KB
+
+  environment:
+    AWS_NODEJS_CONNECTION_REUSE_ENABLED: 1
+    NODE_OPTIONS: '--enable-source-maps --stack-trace-limit=1000'
+
+    AWS_ACCOUNT_ID: ${aws:accountId}
+
+    STAGE: ${self:provider.stage}
+    NODE_ENV: production
+
+    REDIS_URL: ${env:REDIS_URL}
+
+package:
+  individually: true
+  patterns:
+    - "!**"
+    - "!node_modules/**"
+
+functions:
+  # 예제 돌릴때 필요
+  httpMain:
+    handler: artifact/http_main.dispatch
+    url: true
+    package:
+      patterns:
+        - artifact/http_main.mjs*
+        - views/**/*
+        - static/**/*
+    events:
+      - httpApi: ANY /
+      - httpApi: ANY /{pathname+}
+
+  # 관리 편의상 하나에 다 넣음
+  wsMain:
+    handler: artifact/ws_main.dispatch
+    package:
+      patterns:
+        - artifact/ws_main.mjs*
+    events:
+      - websocket:
+          route: $connect
+      - websocket:
+          route: $disconnect
+      - websocket:
+          route: $default
+
+custom:
+  scriptHooks:
+    before:package:createDeploymentArtifacts: pnpm artifact

@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>EIO Latency</title>
+    <link rel="stylesheet" href="/static/style.css" />
+
+    <script src="https://cdn.jsdelivr.net/npm/engine.io-client@4.1.4/dist/engine.io.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/smoothie@1.19.0/smoothie.min.js"></script>
+
+    <!-- injection -->
+    <script type="text/javascript">
+      const g_endpoint = "{{ websocketUrl }}";
+    </script>
+  </head>
+  <body>
+    <h1>EIO Latency
+      <span id="latency"></span>
+    </h1>
+    <h2 id="transport">(connecting)</h2>
+    <canvas id="chart" height="200"></canvas>
+    <script src="/static/main.js"></script>
+  </body>
+</html>
