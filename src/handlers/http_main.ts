@@ -1,7 +1,7 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import { APIGatewayProxyHandlerV2 } from "aws-lambda";
-import { engine } from "../instances/rest.js";
+import { liquid } from "../instances/rest.js";
 import * as settings from "../settings.js";
 
 export const dispatch: APIGatewayProxyHandlerV2 = async (event, context) => {
@@ -28,7 +28,7 @@ export const dispatch: APIGatewayProxyHandlerV2 = async (event, context) => {
 
   // else..
   const websocketUrl = settings.WEBSOCKET_URL;
-  const text = await engine.renderFile("index", {
+  const text = await liquid.renderFile("index", {
     websocketUrl,
   });
   return {
