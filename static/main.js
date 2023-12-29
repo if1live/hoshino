@@ -23,6 +23,7 @@ function render() {
 // socket
 const socket = new eio.Socket(g_endpoint, {
   transports: ["websocket"],
+  path: '/dev/engine.io/',
 });
 let last;
 function send() {
