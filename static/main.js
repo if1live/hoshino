@@ -21,9 +21,9 @@ function render() {
 }
 
 // socket
-const socket = new eio.Socket(g_endpoint, {
+const socket = new eio.Socket(g_endpoint.origin, {
   transports: ["websocket"],
-  path: '/dev/engine.io/',
+  path: g_endpoint.pathname,
 });
 let last;
 function send() {

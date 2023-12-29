@@ -9,7 +9,7 @@
 
     <!-- injection -->
     <script type="text/javascript">
-      const g_endpoint = "{{ websocketUrl }}";
+      const g_endpoint = new URL("{{ websocketUrl }}");
     </script>
   </head>
   <body>
