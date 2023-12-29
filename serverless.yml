@@ -32,6 +32,15 @@ provider:
 
     REDIS_URL: ${env:REDIS_URL}
 
+  iam:
+    role:
+      statements:
+        - Effect: "Allow"
+          Action:
+            - sqs:SendMessage
+          Resource:
+            - arn:aws:sqs:${self:provider.region}:${aws:accountId}:hoshino-${self:provider.stage}-ws
+
 package:
   individually: true
   patterns:
@@ -65,6 +74,26 @@ functions:
           route: $disconnect
       - websocket:
           route: $default
+
+  sqsMain:
+    handler: artifact/sqs_main.dispatch
+    package:
+      patterns:
+        - artifact/sqs_main.mjs*
+    events:
+      - sqs:
+          arn: arn:aws:sqs:${self:provider.region}:${aws:accountId}:hoshino-${self:provider.stage}-ws
+          batchSize: 1
+          enabled: false
+
+resources:
+  Resources:
+    SQSExampleQueue:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: hoshino-${self:provider.stage}-ws
+        VisibilityTimeout: 60
+        MessageRetentionPeriod: 1209600 # 14 days
 
 custom:
   scriptHooks:

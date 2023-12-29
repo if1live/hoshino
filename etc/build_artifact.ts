@@ -28,6 +28,7 @@ const opts_common: esbuild.BuildOptions = {
     "@aws-sdk/client-apigatewaymanagementapi",
     "@aws-sdk/client-lambda",
     "@aws-sdk/client-sqs",
+    "ioredis-mock",
   ],
   target: "node20",
   format: "esm",
@@ -83,4 +84,5 @@ const build = async (
 await Promise.allSettled([
   build("./src/handlers/http_main.js", "http_main.js", opts_common),
   build("./src/handlers/ws_main.js", "ws_main.js", opts_common),
+  build("./src/handlers/sqs_main.js", "sqs_main.js", opts_common),
 ]);

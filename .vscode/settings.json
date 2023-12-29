@@ -13,10 +13,5 @@
     "quickfix.biome": "explicit",
     "source.organizeImports.biome": "explicit"
   },
-  "typescript.preferences.importModuleSpecifier": "project-relative",
-  "workbench.colorCustomizations": {
-    "activityBar.background": "#342847",
-    "titleBar.activeBackground": "#483764",
-    "titleBar.activeForeground": "#FCFBFD"
-  }
+  "typescript.preferences.importModuleSpecifier": "project-relative"
 }
