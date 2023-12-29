@@ -31,6 +31,7 @@ provider:
     NODE_ENV: production
 
     REDIS_URL: ${env:REDIS_URL}
+    WEBSOCKET_URL: ${env:WEBSOCKET_URL}
 
   iam:
     role:
