@@ -46,7 +46,8 @@ export class ConnectionRepository {
     pipeline: ChainableCommander,
     model: ConnectionModel,
   ): ChainableCommander {
-    const ttl_seconds = WS_CONNECTION_DURATION_SECONDS * 3600;
+    // AWS에서 정의하는 수명보다 더 길면 디버깅할때 도움될거다.
+    const ttl_seconds = WS_CONNECTION_DURATION_SECONDS + 3600;
     const key = ConnectionRepository.createKey(model.connectionId);
     const value = JSON.stringify(model);
     pipeline.set(key, value, "KEEPTTL");

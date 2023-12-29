@@ -24,14 +24,15 @@ socket.on("open", async () => {
     socket.send("message-text");
     await setTimeout(10);
   }
-
-  {
-    const arr = new Uint8Array(2);
-    arr[0] = 0x12;
-    arr[1] = 0x34;
-    socket.send(arr);
-    await setTimeout(10);
-  }
+  
+  // TODO: 바이너리 패킷은 aws websocket api 제약과 겹쳐서 더 봐야함
+  // {
+  //   const arr = new Uint8Array(2);
+  //   arr[0] = 0x12;
+  //   arr[1] = 0x34;
+  //   socket.send(arr);
+  //   await setTimeout(10);
+  // }
 
   await setTimeout(60_000);
   socket.close();
