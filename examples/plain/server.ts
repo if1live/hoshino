@@ -25,7 +25,6 @@ io.on("connection", async (socket) => {
   /** Fired when the client sends a message. */
   socket.on("message", (data: string | Buffer) => {
     // 편의상 echo
-    console.log("message", data);
     socket.send(data);
   });
 

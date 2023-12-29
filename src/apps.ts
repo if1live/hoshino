@@ -6,6 +6,12 @@ import { encodePacketAsync } from "./engine/helpers.js";
 const socket = new MySocketPolicy();
 
 socket.on("message", async (sock, data) => {
+  // latency example
+  if (data === "ping") {
+    await sock.send("pong");
+    return;
+  }
+
   console.log("my_message", sock.id, data);
 
   // TODO: 간단하게 echo 구현

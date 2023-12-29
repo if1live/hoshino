@@ -53,12 +53,6 @@ const fn_message = async (
     body: "OK",
   };
 
-  // TODO: engine.io 구현하려고 디버깅용으로 뜯기
-  console.log("message", {
-    connectionId: event.requestContext.connectionId,
-    body: event.body,
-  });
-
   const packet = decodePacket(event.body, "arraybuffer");
 
   // engine.io 패킷으로의 파싱 처리에 실패한 경우, message로 취급
