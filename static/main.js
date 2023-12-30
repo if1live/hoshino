@@ -49,5 +49,7 @@ socket.on("message", () => {
   const latency = new Date() - last;
   $("latency").innerHTML = `${latency}ms`;
   if (time) time.append(+new Date(), latency);
-  setTimeout(send, 100);
+  
+  // setTimeout(send, 100);
+  setTimeout(send, 1000);
 });
