@@ -1,5 +1,6 @@
 import { ApiGatewayManagementApiClient } from "@aws-sdk/client-apigatewaymanagementapi";
 import { Packet } from "engine.io-parser";
+import * as R from "remeda";
 import { ConnectionAction } from "../repositories.js";
 import * as settings from "../settings.js";
 import { encodePacketAsync } from "./helpers.js";
@@ -90,25 +91,29 @@ export class MySocketPolicy {
 
   async dispatch_message(sock: MySocket, data: string) {
     for (const fn of this.list_message) {
-      await fn(sock, data);
+      const result = fn(sock, data);
+      if (R.isPromise(result)) await result;
     }
   }
 
   async dispatch_close(sock: MySocket, reason: string) {
     for (const fn of this.list_close) {
-      await fn(sock, reason);
+      const result = fn(sock, reason);
+      if (R.isPromise(result)) await result;
     }
   }
 
   async dispatch_error(sock: MySocket, error: Error) {
     for (const fn of this.list_error) {
-      await fn(sock, error);
+      const result = fn(sock, error);
+      if (R.isPromise(result)) await result;
     }
   }
 
   async dispatch_heartbeat(sock: MySocket) {
     for (const fn of this.list_heartbeat) {
-      await fn(sock);
+      const result = fn(sock);
+      if (R.isPromise(result)) await result;
     }
   }
 }

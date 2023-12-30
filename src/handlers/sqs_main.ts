@@ -1,5 +1,6 @@
 import { setTimeout } from "node:timers/promises";
 import { SQSHandler } from "aws-lambda";
+import { Packet } from "engine.io-parser";
 import { MySocket } from "../engine/MySocket.js";
 import { encodePacketAsync } from "../engine/helpers.js";
 import {
@@ -32,8 +33,10 @@ export const dispatch: SQSHandler = async (event, context) => {
 };
 
 const dispatch_handshake = async (command: Command_Handshake) => {
+  // 웹소켓 연결이 완전히 끝나기전에 전송하며 410 GoneException 터진다.
   // websocket connection이 붙었다고 확신이 생긴 다음에 메세지를 보내고 싶다.
-  // SQS 시작 이후 10ms 기다리면 충분하지 않을까?
+  // SQS 시작 이후 얼마나 기대려야 안전할까?
+  // (성공 시간을 알 방법이 생각나지 않아서 2022년 설계에서는 클라가 onopen에서 패킷을 보내게 했던건데...)
   await setTimeout(10);
 
   const handshake: Handshake = {
@@ -52,5 +55,9 @@ const dispatch_handshake = async (command: Command_Handshake) => {
 };
 
 const dispatch_schedule = async (command: Command_Schedule) => {
-  console.log("schedule");
+  const packet: Packet = { type: "ping" };
+  const encoded = await encodePacketAsync(packet);
+
+  const sock = new MySocket(command.connectionId, command.endpoint);
+  await sock.send(encoded, { wsPreEncoded: encoded });
 };
